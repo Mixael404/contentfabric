@@ -1,0 +1,22 @@
+{
+  "name": "content-fabric",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Content factory: scheduled AI-generated posts for Telegram and Max channels",
+  "type": "module",
+  "workspaces": [
+    "server",
+    "admin"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace server",
+    "dev:admin": "npm run dev --workspace admin",
+    "build": "npm run build --workspace admin && npm run build --workspace server",
+    "start": "npm run start --workspace server",
+    "typecheck": "npm run typecheck --workspace server && npm run typecheck --workspace admin",
+    "db:generate": "npm run db:generate --workspace server"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

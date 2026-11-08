@@ -1,0 +1,1 @@
+ALTER TABLE `campaigns` ADD `image_source_mode` text DEFAULT 'model' NOT NULL;

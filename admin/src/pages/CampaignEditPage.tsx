@@ -46,6 +46,7 @@ const emptyCampaign = (model: string): CampaignInput => ({
   imageSourceMode: 'model',
   imageRequired: false,
   maxBodyLength: 2500,
+  recentTopicsLimit: 60,
 });
 
 export default function CampaignEditPage() {
@@ -196,6 +197,14 @@ export default function CampaignEditPage() {
                 <input type="number" min={300} max={3500} value={form.maxBodyLength} onChange={(e) => set('maxBodyLength', Number(e.target.value))} />
               </Field>
             </div>
+            <Field
+              errors={errors}
+              name="recentTopicsLimit"
+              label="Память о прошлых постах, шт."
+              hint="Сколько последних заголовков (с датой и первым хэштегом) модель видит, чтобы не повторять темы и чередовать типы постов. 60 при 6 постах в день это 10 дней. 0 отключает."
+            >
+              <input type="number" min={0} max={300} value={form.recentTopicsLimit} onChange={(e) => set('recentTopicsLimit', Number(e.target.value))} />
+            </Field>
           </div>
 
           <div className="card form">

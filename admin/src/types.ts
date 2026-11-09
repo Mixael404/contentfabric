@@ -20,6 +20,7 @@ export interface Campaign {
   imageSourceMode: 'model' | 'stock' | 'article';
   imageRequired: boolean;
   maxBodyLength: number;
+  recentTopicsLimit: number;
   createdAt: string;
   updatedAt: string;
   nextRunAt: string | null;

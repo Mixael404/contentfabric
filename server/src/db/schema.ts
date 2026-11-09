@@ -25,6 +25,8 @@ export const campaigns = sqliteTable('campaigns', {
   imageSourceMode: text('image_source_mode').notNull().default('model'),
   imageRequired: integer('image_required', { mode: 'boolean' }).notNull().default(false),
   maxBodyLength: integer('max_body_length').notNull().default(2500),
+  /** How many previous post titles the model sees to avoid repeating topics */
+  recentTopicsLimit: integer('recent_topics_limit').notNull().default(60),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });

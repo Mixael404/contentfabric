@@ -1,0 +1,1 @@
+ALTER TABLE `campaigns` ADD `recent_topics_limit` integer DEFAULT 60 NOT NULL;

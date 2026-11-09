@@ -145,15 +145,33 @@ export function listPosts(opts: { campaignId?: string; status?: string; limit?: 
     .all();
 }
 
-export function recentPublishedTitles(campaignId: string, limit = 15): string[] {
+export interface RecentTopic {
+  title: string;
+  /** First hashtag of the post, used as its type marker (e.g. #новости) */
+  tag: string | null;
+  createdAt: string;
+}
+
+export function recentTopics(campaignId: string, limit = 60): RecentTopic[] {
+  if (limit <= 0) return [];
   return db
-    .select({ title: posts.title })
+    .select({ title: posts.title, hashtags: posts.hashtags, createdAt: posts.createdAt })
     .from(posts)
     .where(and(eq(posts.campaignId, campaignId), inArray(posts.status, ['published', 'approved', 'awaiting_review'])))
     .orderBy(desc(posts.createdAt))
     .limit(limit)
     .all()
-    .map((r) => r.title);
+    .map((r) => {
+      let tag: string | null = null;
+      try {
+        const tags = JSON.parse(r.hashtags || '[]') as string[];
+        const first = tags.find((t) => t && t.trim());
+        if (first) tag = `#${first.trim().replace(/^#+/, '')}`;
+      } catch {
+        tag = null;
+      }
+      return { title: r.title, tag, createdAt: r.createdAt };
+    });
 }
 
 export function recentMediaProviderIds(campaignId: string, limit = 60): Set<string> {

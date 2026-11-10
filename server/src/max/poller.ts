@@ -3,6 +3,12 @@ import { logger } from '../logger.js';
 import { getSetting, setSetting, upsertMaxChat } from '../db/repo.js';
 import { MaxClient } from '../publishers/max.js';
 
+function describeError(err: unknown): string {
+  if (!(err instanceof Error)) return String(err);
+  const cause = (err as Error & { cause?: { message?: string; code?: string } }).cause;
+  return cause?.message ? `${err.message}: ${cause.message}${cause.code ? ` (${cause.code})` : ''}` : err.message;
+}
+
 /**
  * Learns the chat_id of channels the Max bot was added to. The Max API has no
  * method to resolve a public link into an id, so we long-poll GET /updates and
@@ -46,7 +52,7 @@ export function startMaxPoller(): void {
       botName = me.username ? `@${me.username}` : me.name;
       logger.info({ bot: botName }, 'max bot initialised');
     } catch (err) {
-      logger.error({ err }, 'max getMe failed (check MAX_BOT_TOKEN and the CA certificate)');
+      logger.error({ error: describeError(err) }, 'max getMe failed: check MAX_BOT_TOKEN; a TLS/certificate error means the Russian root CA is not trusted (see certs/README.md)');
     }
     let marker: number | null = Number(getSetting(MARKER_KEY) ?? '') || null;
     let backoff = 2000;
@@ -72,7 +78,7 @@ export function startMaxPoller(): void {
         }
       } catch (err) {
         if (!running) break;
-        logger.warn({ err: err instanceof Error ? err.message : String(err), backoff }, 'max updates poll failed');
+        logger.warn({ error: describeError(err), backoff }, 'max updates poll failed');
         await new Promise((r) => setTimeout(r, backoff));
         backoff = Math.min(backoff * 2, 60_000);
       }

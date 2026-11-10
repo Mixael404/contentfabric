@@ -22,7 +22,9 @@ export const CampaignInput = z
     timezone: z.string().trim().default('Europe/Moscow'),
     language: z.string().trim().min(2).max(32).default('ru'),
     telegramChatId: optionalText,
-    maxChatId: optionalText,
+    maxChatId: optionalText.refine((v) => !v || /^-?\d+$/.test(v), {
+      message: 'Нужен числовой chat_id канала Max, а не ссылка. Добавьте бота администратором в канал и выберите канал из списка ниже.',
+    }),
     mode: z.enum(['auto', 'review']).default('review'),
     imageProvider: z.enum(['auto', 'unsplash', 'pexels', 'pixabay', 'none']).default('auto'),
     imageSourceMode: z.enum(['model', 'stock', 'article']).default('model'),

@@ -35,12 +35,16 @@ export class MaxPublisher implements Publisher {
     this.dispatcher = insecureTls ? new Agent({ connect: { rejectUnauthorized: false } }) : undefined;
   }
 
-  private async request<T>(path: string, init: { method?: string; body?: string | FormData; headers?: Record<string, string> } = {}): Promise<T> {
+  protected async request<T>(
+    path: string,
+    init: { method?: string; body?: string | FormData; headers?: Record<string, string>; timeoutMs?: number } = {},
+  ): Promise<T> {
     const res = await undiciFetch(`${this.baseUrl}${path}`, {
       method: init.method ?? 'GET',
       headers: { Authorization: this.token, Accept: 'application/json', ...(init.headers ?? {}) },
       body: init.body as never,
       dispatcher: this.dispatcher,
+      signal: AbortSignal.timeout(init.timeoutMs ?? 30_000),
     });
     const text = await res.text();
     let json: unknown = null;
@@ -107,5 +111,45 @@ export class MaxPublisher implements Publisher {
         await sleep(delays[attempt]);
       }
     }
+  }
+}
+
+// ---------- read API used by the updates poller ----------
+
+export interface MaxChatInfo {
+  chat_id: number;
+  type: 'chat' | 'channel' | 'dialog';
+  status?: string;
+  title?: string | null;
+  link?: string | null;
+  is_public?: boolean;
+}
+
+export interface MaxUpdate {
+  update_type: string;
+  timestamp?: number;
+  chat_id?: number;
+  is_channel?: boolean;
+  message?: { recipient?: { chat_id?: number; chat_type?: string } };
+}
+
+export interface MaxUpdatesResponse {
+  updates: MaxUpdate[];
+  marker: number | null;
+}
+
+export class MaxClient extends MaxPublisher {
+  getMe(): Promise<{ user_id: number; name: string; username?: string }> {
+    return this.request('/me');
+  }
+
+  getChat(chatId: string | number): Promise<MaxChatInfo> {
+    return this.request(`/chats/${encodeURIComponent(String(chatId))}`);
+  }
+
+  getUpdates(marker: number | null, timeoutSeconds = 30): Promise<MaxUpdatesResponse> {
+    const q = new URLSearchParams({ timeout: String(timeoutSeconds), limit: '100' });
+    if (marker !== null) q.set('marker', String(marker));
+    return this.request(`/updates?${q.toString()}`, { timeoutMs: (timeoutSeconds + 15) * 1000 });
   }
 }

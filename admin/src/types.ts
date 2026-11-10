@@ -106,10 +106,20 @@ export interface RunDetail extends Omit<RunSummary, 'campaignName'> {
   post: Post | null;
 }
 
+export interface MaxChat {
+  chatId: string;
+  title: string | null;
+  type: 'channel' | 'chat' | 'dialog';
+  link: string | null;
+  status: 'active' | 'removed';
+  firstSeenAt: string;
+  lastSeenAt: string;
+}
+
 export interface Status {
   version: string;
   telegram: { configured: boolean; botUsername: string | null };
-  max: { configured: boolean; insecureTls: boolean };
+  max: { configured: boolean; insecureTls: boolean; running: boolean; botName: string | null; knownChats: number };
   review: { viaTelegram: boolean; adminChatId: string | null };
   imageProviders: string[];
   publicBaseUrl: string | null;

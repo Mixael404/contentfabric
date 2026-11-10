@@ -9,6 +9,7 @@ import { approvePost, regeneratePost, skipPost } from './review/actions.js';
 import { startScheduler, stopScheduler } from './scheduler/scheduler.js';
 import { drainQueue } from './scheduler/queue.js';
 import { configuredImageProviders } from './images/index.js';
+import { startMaxPoller, stopMaxPoller } from './max/poller.js';
 
 async function main() {
   runMigrations();
@@ -35,6 +36,7 @@ async function main() {
   await app.listen({ port: config.PORT, host: config.HOST });
 
   startScheduler();
+  startMaxPoller();
 
   let shuttingDown = false;
   const shutdown = async (signal: string) => {
@@ -42,6 +44,7 @@ async function main() {
     shuttingDown = true;
     logger.info({ signal }, 'shutting down');
     stopScheduler();
+    stopMaxPoller();
     await stopReviewBot();
     await drainQueue(30_000);
     await app.close();

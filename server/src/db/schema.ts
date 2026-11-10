@@ -137,6 +137,19 @@ export const media = sqliteTable(
   (t) => [index('media_campaign_idx').on(t.campaignId, t.createdAt)],
 );
 
+/** Chats and channels the Max bot was added to, learned from bot_added / message events. */
+export const maxChats = sqliteTable('max_chats', {
+  chatId: text('chat_id').primaryKey(),
+  title: text('title'),
+  /** 'channel' | 'chat' | 'dialog' */
+  type: text('type').notNull().default('chat'),
+  link: text('link'),
+  /** 'active' | 'removed' */
+  status: text('status').notNull().default('active'),
+  firstSeenAt: text('first_seen_at').notNull(),
+  lastSeenAt: text('last_seen_at').notNull(),
+});
+
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
   value: text('value').notNull(),
@@ -151,4 +164,5 @@ export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
 export type Publication = typeof publications.$inferSelect;
 export type Media = typeof media.$inferSelect;
+export type MaxChat = typeof maxChats.$inferSelect;
 export type NewMedia = typeof media.$inferInsert;

@@ -59,7 +59,16 @@ export default function SettingsPage() {
             </div>
             <div className="stat">
               <div className="k">Max</div>
-              <div className="v">{status.max.configured ? <Badge status="on" label="включён" /> : <Badge status="off" label="нет MAX_BOT_TOKEN" />}</div>
+              <div className="v">
+                {status.max.configured ? (
+                  <>
+                    <Badge status="on" label={status.max.botName ?? 'включён'} />
+                    <div className="muted small">каналов, куда добавлен бот: {status.max.knownChats}</div>
+                  </>
+                ) : (
+                  <Badge status="off" label="нет MAX_BOT_TOKEN" />
+                )}
+              </div>
             </div>
             <div className="stat">
               <div className="k">Модерация в Telegram</div>

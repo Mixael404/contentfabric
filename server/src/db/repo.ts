@@ -1,9 +1,9 @@
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { db, schema } from './client.js';
-import type { Campaign, Media, NewCampaign, NewMedia, NewPost, NewRun, Post, Publication, Run } from './schema.js';
+import type { Campaign, MaxChat, Media, NewCampaign, NewMedia, NewPost, NewRun, Post, Publication, Run } from './schema.js';
 import { newId, nowIso } from '../utils/ids.js';
 
-const { campaigns, runs, posts, publications, media, settings } = schema;
+const { campaigns, runs, posts, publications, media, settings, maxChats } = schema;
 
 // ---------- campaigns ----------
 
@@ -211,6 +211,42 @@ export function createMedia(data: Omit<NewMedia, 'id' | 'createdAt'>): Media {
   const row: NewMedia = { ...data, id: newId(), createdAt: nowIso() };
   db.insert(media).values(row).run();
   return getMedia(row.id)!;
+}
+
+// ---------- max chats ----------
+
+export function upsertMaxChat(data: { chatId: string; title?: string | null; type?: string; link?: string | null; status?: string }): MaxChat {
+  const now = nowIso();
+  const existing = db.select().from(maxChats).where(eq(maxChats.chatId, data.chatId)).get();
+  if (existing) {
+    db.update(maxChats)
+      .set({
+        title: data.title ?? existing.title,
+        type: data.type ?? existing.type,
+        link: data.link ?? existing.link,
+        status: data.status ?? 'active',
+        lastSeenAt: now,
+      })
+      .where(eq(maxChats.chatId, data.chatId))
+      .run();
+  } else {
+    db.insert(maxChats)
+      .values({
+        chatId: data.chatId,
+        title: data.title ?? null,
+        type: data.type ?? 'chat',
+        link: data.link ?? null,
+        status: data.status ?? 'active',
+        firstSeenAt: now,
+        lastSeenAt: now,
+      })
+      .run();
+  }
+  return db.select().from(maxChats).where(eq(maxChats.chatId, data.chatId)).get()!;
+}
+
+export function listMaxChats(): MaxChat[] {
+  return db.select().from(maxChats).orderBy(desc(maxChats.lastSeenAt)).all();
 }
 
 // ---------- settings ----------

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ApiError, del, get, post, put } from '../api';
-import type { Campaign, CampaignInput, Status } from '../types';
+import type { Campaign, CampaignInput, MaxChat, Status } from '../types';
 
 const DEFAULT_TIMES = ['09:00', '12:00', '14:00', '16:00', '18:00', '20:00'];
 
@@ -57,6 +57,7 @@ export default function CampaignEditPage() {
   const [timesText, setTimesText] = useState('');
   const [models, setModels] = useState<string[]>([]);
   const [status, setStatus] = useState<Status | null>(null);
+  const [maxChats, setMaxChats] = useState<MaxChat[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [msg, setMsg] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
@@ -77,6 +78,7 @@ export default function CampaignEditPage() {
         }
       });
     get<Status>('/status').then(setStatus).catch(() => undefined);
+    get<MaxChat[]>('/max/chats').then(setMaxChats).catch(() => undefined);
     if (!isNew) {
       get<Campaign>(`/campaigns/${id}`)
         .then((c) => {
@@ -272,9 +274,25 @@ export default function CampaignEditPage() {
               errors={errors}
               name="maxChatId"
               label="Max канал (chat_id)"
-              hint={status && !status.max.configured ? 'MAX_BOT_TOKEN не задан: публикация в Max будет пропущена, значение сохранится на будущее.' : 'Числовой chat_id канала в Max.'}
+              hint={
+                status && !status.max.configured
+                  ? 'MAX_BOT_TOKEN не задан: публикация в Max будет пропущена, значение сохранится на будущее.'
+                  : 'Ссылка вида max.ru/channel_… не подходит: API Max отдаёт только числовой id. Добавьте бота администратором в канал, через минуту он появится в списке ниже.'
+              }
             >
               <input type="text" value={form.maxChatId ?? ''} onChange={(e) => set('maxChatId', e.target.value)} placeholder="123456789" />
+              {maxChats.filter((c) => c.status === 'active').length > 0 && (
+                <select value="" onChange={(e) => e.target.value && set('maxChatId', e.target.value)} style={{ marginTop: 6 }}>
+                  <option value="">Выбрать из каналов, куда добавлен бот…</option>
+                  {maxChats
+                    .filter((c) => c.status === 'active')
+                    .map((c) => (
+                      <option key={c.chatId} value={c.chatId}>
+                        {c.type === 'channel' ? 'Канал' : 'Чат'}: {c.title ?? 'без названия'} ({c.chatId})
+                      </option>
+                    ))}
+                </select>
+              )}
             </Field>
           </div>
 

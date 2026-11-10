@@ -9,10 +9,13 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`/api${path}`, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...(init.headers ?? {}) },
-  });
+  // Fastify rejects an empty body sent with a JSON content type, so the
+  // header is added only when there is something to parse.
+  const headers = new Headers(init.headers);
+  if (init.body !== undefined && init.body !== null && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+  const res = await fetch(`/api${path}`, { ...init, headers });
   if (res.status === 204) return undefined as T;
   const text = await res.text();
   let data: unknown = null;

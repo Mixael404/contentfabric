@@ -21,6 +21,7 @@ export interface Campaign {
   imageRequired: boolean;
   maxBodyLength: number;
   recentTopicsLimit: number;
+  showSources: boolean;
   createdAt: string;
   updatedAt: string;
   nextRunAt: string | null;

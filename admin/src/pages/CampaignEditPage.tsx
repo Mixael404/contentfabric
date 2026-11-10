@@ -47,6 +47,7 @@ const emptyCampaign = (model: string): CampaignInput => ({
   imageRequired: false,
   maxBodyLength: 2500,
   recentTopicsLimit: 60,
+  showSources: false,
 });
 
 export default function CampaignEditPage() {
@@ -327,6 +328,10 @@ export default function CampaignEditPage() {
             <label className="checkbox">
               <input type="checkbox" checked={form.imageRequired} onChange={(e) => set('imageRequired', e.target.checked)} />
               Картинка обязательна (иначе запуск завершится ошибкой, а не постом без картинки)
+            </label>
+            <label className="checkbox">
+              <input type="checkbox" checked={form.showSources} onChange={(e) => set('showSources', e.target.checked)} />
+              Ссылки в посте: блок «Источники», подпись «Фото: сайт» и ссылки в тексте. Выключено — пост выходит без единой ссылки
             </label>
           </div>
         </div>

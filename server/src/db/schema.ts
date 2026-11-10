@@ -27,6 +27,8 @@ export const campaigns = sqliteTable('campaigns', {
   maxBodyLength: integer('max_body_length').notNull().default(2500),
   /** How many previous post titles the model sees to avoid repeating topics */
   recentTopicsLimit: integer('recent_topics_limit').notNull().default(60),
+  /** Render the sources footer, the photo credit and inline links in the published post */
+  showSources: integer('show_sources', { mode: 'boolean' }).notNull().default(false),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });

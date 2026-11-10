@@ -1,6 +1,5 @@
-import { parseBlocks, type Block } from './ir.js';
+import { parseBlocks, parseInline, stripBlockLinks, stripLinks, type Block } from './ir.js';
 import { escapeHtml, renderBlocks, renderInline, visibleLength, type Target } from './render.js';
-import { parseInline } from './ir.js';
 
 export interface Source {
   title: string;
@@ -26,6 +25,15 @@ export const TELEGRAM_TEXT_LIMIT = 4096;
 export const MAX_TEXT_LIMIT = 4000;
 
 export type TelegramMode = 'photo_caption' | 'text_preview' | 'text_only';
+
+export interface ComposeOptions {
+  /**
+   * Render the sources footer, the photo credit and inline links.
+   * When false the post goes out without a single link: the footer is
+   * dropped and markdown links are reduced to their text.
+   */
+  showSources: boolean;
+}
 
 export interface ComposedPost {
   telegramHtml: string;
@@ -77,16 +85,19 @@ function renderCredit(credit: ImageCredit | null | undefined, target: Target): s
   return `📷 <i>Фото:</i> <a href="${escapeHtml(credit.url)}">${escapeHtml(credit.label)}</a>`;
 }
 
-function renderTitle(title: string, target: Target): string {
-  const inline = parseInline(title.trim());
+function renderTitle(title: string, target: Target, opts: ComposeOptions): string {
+  let inline = parseInline(title.trim());
+  if (!opts.showSources) inline = stripLinks(inline);
   if (target === 'plain') return renderInline(inline, 'plain');
   return `<b>${renderInline(inline, target)}</b>`;
 }
 
-function assemble(parts: PostParts, blocks: Block[], target: Target): string {
-  const footer = [renderSources(parts.sources, target), renderCredit(parts.imageCredit, target)].filter(Boolean).join('\n');
+function assemble(parts: PostParts, blocks: Block[], target: Target, opts: ComposeOptions): string {
+  const footer = opts.showSources
+    ? [renderSources(parts.sources, target), renderCredit(parts.imageCredit, target)].filter(Boolean).join('\n')
+    : '';
   const sections = [
-    renderTitle(parts.title, target),
+    renderTitle(parts.title, target, opts),
     renderBlocks(blocks, target),
     footer,
     parts.hashtags.length ? (target === 'plain' ? parts.hashtags.join(' ') : escapeHtml(parts.hashtags.join(' '))) : '',
@@ -98,15 +109,16 @@ function assemble(parts: PostParts, blocks: Block[], target: Target): string {
  * Builds the final markup for every target, trimming trailing body blocks
  * only if the hard messenger limits would otherwise be exceeded.
  */
-export function composePost(parts: PostParts, hasImage: boolean): ComposedPost {
+export function composePost(parts: PostParts, hasImage: boolean, opts: ComposeOptions): ComposedPost {
   const normalized: PostParts = { ...parts, hashtags: normalizeHashtags(parts.hashtags) };
   let blocks = parseBlocks(parts.bodyMarkdown);
+  if (!opts.showSources) blocks = stripBlockLinks(blocks);
   let truncated = false;
 
   const build = () => ({
-    telegramHtml: assemble(normalized, blocks, 'telegram'),
-    maxHtml: assemble(normalized, blocks, 'max'),
-    plainText: assemble(normalized, blocks, 'plain'),
+    telegramHtml: assemble(normalized, blocks, 'telegram', opts),
+    maxHtml: assemble(normalized, blocks, 'max', opts),
+    plainText: assemble(normalized, blocks, 'plain', opts),
   });
 
   let built = build();

@@ -122,6 +122,29 @@ export function parseBlocks(markdown: string): Block[] {
   return blocks;
 }
 
+/** Replaces link nodes with their visible text (campaigns that publish without links). */
+export function stripLinks(nodes: Inline[]): Inline[] {
+  const out: Inline[] = [];
+  for (const n of nodes) {
+    switch (n.type) {
+      case 'text':
+      case 'code':
+        out.push(n);
+        break;
+      case 'link':
+        out.push(...stripLinks(n.children));
+        break;
+      default:
+        out.push({ type: n.type, children: stripLinks(n.children) });
+    }
+  }
+  return mergeText(out);
+}
+
+export function stripBlockLinks(blocks: Block[]): Block[] {
+  return blocks.map((b) => (b.type === 'list' ? { ...b, items: b.items.map(stripLinks) } : { ...b, lines: b.lines.map(stripLinks) }));
+}
+
 export function inlineToPlain(nodes: Inline[]): string {
   return nodes
     .map((n) => {

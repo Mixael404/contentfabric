@@ -1,0 +1,1 @@
+ALTER TABLE `campaigns` ADD `show_sources` integer DEFAULT false NOT NULL;

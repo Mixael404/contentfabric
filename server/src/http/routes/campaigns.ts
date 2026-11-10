@@ -46,6 +46,7 @@ function toRow(input: CampaignInputT) {
     imageRequired: input.imageRequired,
     maxBodyLength: input.maxBodyLength,
     recentTopicsLimit: input.recentTopicsLimit,
+    showSources: input.showSources,
   };
 }
 

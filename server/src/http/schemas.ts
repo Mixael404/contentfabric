@@ -31,6 +31,7 @@ export const CampaignInput = z
     imageRequired: z.boolean().default(false),
     maxBodyLength: z.number().int().min(300).max(3500).default(2500),
     recentTopicsLimit: z.number().int().min(0).max(300).default(60),
+    showSources: z.boolean().default(false),
   })
   .superRefine((v, ctx) => {
     if (!isValidTimezone(v.timezone)) ctx.addIssue({ code: 'custom', path: ['timezone'], message: 'Неизвестная таймзона (IANA, например Europe/Moscow)' });

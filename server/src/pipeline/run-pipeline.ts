@@ -223,6 +223,7 @@ export async function executeRun(runId: string): Promise<void> {
     const composed = composePost(
       { title: draft.title, bodyMarkdown: draft.body, sources, hashtags: draft.hashtags, imageCredit },
       Boolean(mediaId),
+      { showSources: campaign.showSources },
     );
     if (composed.truncated) log.warn('Пост обрезан до лимита мессенджера');
 

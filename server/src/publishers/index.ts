@@ -7,7 +7,7 @@ import { TelegramPublisher } from './telegram.js';
 const publishers = new Map<Channel, Publisher>();
 publishers.set('telegram', new TelegramPublisher(bot.api));
 if (config.maxEnabled && config.MAX_BOT_TOKEN) {
-  publishers.set('max', new MaxPublisher(config.MAX_BOT_TOKEN, config.MAX_API_BASE_URL, config.MAX_INSECURE_TLS));
+  publishers.set('max', new MaxPublisher(config.MAX_BOT_TOKEN, config.MAX_API_BASE_URL, config.MAX_INSECURE_TLS, config.MAX_CA_CERT));
 }
 
 export function getPublisher(channel: Channel): Publisher | undefined {

@@ -1,5 +1,25 @@
+import fs from 'node:fs';
+import tls from 'node:tls';
+import { fileURLToPath } from 'node:url';
 import { Agent, FormData, fetch as undiciFetch } from 'undici';
 import { logger } from '../logger.js';
+
+/** Public root CA of the Russian Ministry of Digital Development that signs the Max API certificate. */
+const BUNDLED_CA_PATH = fileURLToPath(new URL('../../certs/russian-trusted-root-ca.pem', import.meta.url));
+
+function buildMaxDispatcher(insecureTls: boolean, extraCaPath?: string): Agent {
+  if (insecureTls) return new Agent({ connect: { rejectUnauthorized: false } });
+  const ca: string[] = [...tls.rootCertificates];
+  for (const file of [BUNDLED_CA_PATH, extraCaPath].filter((f): f is string => Boolean(f))) {
+    try {
+      ca.push(fs.readFileSync(file, 'utf8'));
+    } catch (err) {
+      logger.warn({ file, err: err instanceof Error ? err.message : String(err) }, 'Max CA certificate not readable');
+    }
+  }
+  // Trust the extra CA only for connections made by this client, not process-wide.
+  return new Agent({ connect: { ca } });
+}
 import { sleep } from '../telegram/bot.js';
 import type { Publisher, PublishResult, RenderedPost } from './publisher.js';
 
@@ -23,16 +43,17 @@ interface MaxError {
  */
 export class MaxPublisher implements Publisher {
   readonly channel = 'max' as const;
-  private readonly dispatcher: Agent | undefined;
+  private readonly dispatcher: Agent;
 
   constructor(
     private readonly token: string,
     private readonly baseUrl: string,
     insecureTls = false,
+    extraCaPath?: string,
   ) {
-    // The Max API uses a certificate from the Russian national CA; either mount it via
-    // NODE_EXTRA_CA_CERTS or (dev only) disable verification for this client.
-    this.dispatcher = insecureTls ? new Agent({ connect: { rejectUnauthorized: false } }) : undefined;
+    // The Max API certificate is issued by the Russian national CA, which is bundled with the
+    // app and trusted for this client only. MAX_INSECURE_TLS disables verification (dev only).
+    this.dispatcher = buildMaxDispatcher(insecureTls, extraCaPath);
   }
 
   protected async request<T>(

@@ -44,7 +44,7 @@ async function rememberChat(chatId: number, hint: { isChannel?: boolean; type?: 
 
 export function startMaxPoller(): void {
   if (!config.maxEnabled || !config.MAX_BOT_TOKEN) return;
-  client = new MaxClient(config.MAX_BOT_TOKEN, config.MAX_API_BASE_URL, config.MAX_INSECURE_TLS);
+  client = new MaxClient(config.MAX_BOT_TOKEN, config.MAX_API_BASE_URL, config.MAX_INSECURE_TLS, config.MAX_CA_CERT);
   running = true;
   void (async () => {
     try {

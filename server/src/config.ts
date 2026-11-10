@@ -45,6 +45,8 @@ const EnvSchema = z.object({
   MAX_BOT_TOKEN: z.string().optional(),
   MAX_API_BASE_URL: z.string().url().default('https://platform-api2.max.ru'),
   MAX_INSECURE_TLS: bool,
+  /** Optional path to an extra CA bundle (PEM) for the Max API; the Russian root CA is bundled already */
+  MAX_CA_CERT: z.string().optional(),
 
   UNSPLASH_ACCESS_KEY: z.string().optional(),
   PEXELS_API_KEY: z.string().optional(),

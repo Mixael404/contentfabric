@@ -21,6 +21,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/server/package.json ./server/package.json
 COPY --from=build /app/server/dist ./server/dist
 COPY --from=build /app/server/drizzle ./server/drizzle
+COPY --from=build /app/server/certs ./server/certs
 COPY --from=build /app/admin/dist ./admin/dist
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh && mkdir -p /data

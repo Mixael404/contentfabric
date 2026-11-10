@@ -6,3 +6,4 @@ data/
 .DS_Store
 certs/*.pem
 certs/*.crt
+!server/certs/*.pem
